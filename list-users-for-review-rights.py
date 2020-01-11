@@ -10,7 +10,7 @@ import re
 import locale
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast, List, Any
+from typing import cast, List, Any, Set
 
 import pytz
 
@@ -33,12 +33,12 @@ class UserData:
 
 
 class Controller:
-    def __init__(self):
+    def __init__(self) -> None:
         self.site = pywikibot.Site()
         self.site.login()  # T153541
         self.timezone = pytz.timezone("Europe/Berlin")
 
-    def getUserData(self, user: pywikibot.User, endTime):
+    def getUserData(self, user: pywikibot.User, endTime: datetime) -> UserData:
         contribs = list(user.contributions(total=5000, start=endTime))
         return UserData(
             user,
@@ -48,7 +48,7 @@ class Controller:
             self.getUserRegistrationTimeSafe(user),
         )
 
-    def getUserRegistrationTimeSafe(self, user):
+    def getUserRegistrationTimeSafe(self, user: pywikibot.User) -> datetime:
         registrationTime = user.registration()
         if registrationTime:
             return registrationTime
@@ -68,7 +68,7 @@ class Controller:
         else:
             raise NotImplementedError
 
-    def checkGeneralEventLogCriterias(self, events):
+    def checkGeneralEventLogCriterias(self, events) -> List[CriteriaCheck]:
         criteriaChecks = []
         wasBlockedBefore = False
         hadReviewRightsRemovedBefore = False
@@ -96,7 +96,7 @@ class Controller:
             criteriaChecks.append(CriteriaCheck(True, "Der Benutzer wurde noch nie gesperrt."))
         return criteriaChecks
 
-    def checkGeneralEligibilityForPromotion(self, user):
+    def checkGeneralEligibilityForPromotion(self, user: pywikibot.User) -> List[CriteriaCheck]:
         criteriaChecks = []
         if user.isBlocked():
             criteriaChecks.append(CriteriaCheck(False, "Benutzer ist gesperrt."))
@@ -108,7 +108,7 @@ class Controller:
             criteriaChecks.append(CriteriaCheck(True, "Benutzer ist kein Bot."))
         return criteriaChecks
 
-    def checkRegistrationTime(self, registrationTime, minimumAgeInDays):
+    def checkRegistrationTime(self, registrationTime, minimumAgeInDays) -> List[CriteriaCheck]:
         criteriaChecks = []
         if not registrationTime:
             raise NotImplementedError
@@ -118,7 +118,7 @@ class Controller:
             criteriaChecks.append(CriteriaCheck(True, "Das Benutzerkonto wurde vor mehr als 60 Tagen angelegt."))
         return criteriaChecks
 
-    def checkEditCount(self, contribs, minimumEditCount):
+    def checkEditCount(self, contribs, minimumEditCount) -> List[CriteriaCheck]:
         criteriaChecks = []
         if len(contribs) < minimumEditCount:
             criteriaChecks.append(CriteriaCheck(False, "Das Benutzerkonto hat weniger als 300 Bearbeitungen."))
@@ -126,7 +126,9 @@ class Controller:
             criteriaChecks.append(CriteriaCheck(True, "Das Benutzerkonto hat mindestens 300 Bearbeitungen."))
         return criteriaChecks
 
-    def checkArticleEditCount(self, articleContribs, minimumEditCount, mostRecentEditTime, excludeXDaysBeforeLastEdit):
+    def checkArticleEditCount(
+        self, articleContribs, minimumEditCount, mostRecentEditTime, excludeXDaysBeforeLastEdit
+    ) -> List[CriteriaCheck]:
         relevantEdits = [
             contrib
             for contrib in articleContribs
@@ -144,7 +146,7 @@ class Controller:
             )
         return criteriaChecks
 
-    def checkMinimumEditedArticlePages(self, articleContribs, minimumSeparatePages):
+    def checkMinimumEditedArticlePages(self, articleContribs, minimumSeparatePages) -> List[CriteriaCheck]:
         criteriaChecks = []
         articlePageCount = len(set([contrib[0].title() for contrib in articleContribs]))
         if articlePageCount < minimumSeparatePages:
@@ -157,7 +159,7 @@ class Controller:
             )
         return criteriaChecks
 
-    def checkSpacedEdits(self, contribs, minimumSpacedEdits):
+    def checkSpacedEdits(self, contribs, minimumSpacedEdits) -> List[CriteriaCheck]:
         criteriaChecks = []
         if len(contribs) > 0:
             lastContrib = contribs[0]
@@ -186,7 +188,7 @@ class Controller:
             )
         return criteriaChecks
 
-    def checkCustomSummaryEditCount(self, contribs, minimumEditsWithCustomSummary):
+    def checkCustomSummaryEditCount(self, contribs, minimumEditsWithCustomSummary) -> List[CriteriaCheck]:
         criteriaChecks = []
         customSummaryCount = 0
         for contrib in contribs:
@@ -214,7 +216,7 @@ class Controller:
             )
         return criteriaChecks
 
-    def checkRecentArticleEditCount(self, articleContribs, minimumEditCount, lastXDays):
+    def checkRecentArticleEditCount(self, articleContribs, minimumEditCount, lastXDays) -> List[CriteriaCheck]:
         criteriaChecks = []
         if len(articleContribs) < minimumEditCount or datetime.now() - articleContribs[4][2] > timedelta(
             days=lastXDays
@@ -230,8 +232,8 @@ class Controller:
             )
         return criteriaChecks
 
-    def checkUserEligibleForReviewGroup(self, userData):
-        criteriaChecks = []
+    def checkUserEligibleForReviewGroup(self, userData: UserData) -> List[CriteriaCheck]:
+        criteriaChecks: List[CriteriaCheck] = []
         criteriaChecks += self.checkGeneralEligibilityForPromotion(userData.user)
         criteriaChecks += self.checkGeneralEventLogCriterias(userData.logEntries)
         criteriaChecks += self.checkRegistrationTime(userData.registrationTime, 60)
@@ -246,8 +248,8 @@ class Controller:
 
         return criteriaChecks
 
-    def checkUserEligibleForAutoReviewGroup(self, userData):
-        criteriaChecks = []
+    def checkUserEligibleForAutoReviewGroup(self, userData: UserData) -> List[CriteriaCheck]:
+        criteriaChecks: List[CriteriaCheck] = []
         criteriaChecks += self.checkGeneralEligibilityForPromotion(userData.user)
         criteriaChecks += self.checkGeneralEventLogCriterias(userData.logEntries)
         criteriaChecks += self.checkRegistrationTime(userData.registrationTime, 30)
@@ -260,8 +262,8 @@ class Controller:
 
         return criteriaChecks
 
-    def listNewUsers(self):
-        alreadyChecked = set()
+    def listNewUsers(self) -> None:
+        alreadyChecked: Set[str] = set()
         startTime = datetime(2020, 1, 7)
         endTime = startTime + timedelta(days=1)
         recentChanges = self.site.recentchanges(end=startTime, start=endTime)  # reverse order
@@ -309,7 +311,7 @@ class Controller:
             print(f"")
 
 
-def main():
+def main() -> None:
     locale.setlocale(locale.LC_ALL, "de_DE.utf8")
     pywikibot.handle_args()
     # Controller().checkSingleUser()
