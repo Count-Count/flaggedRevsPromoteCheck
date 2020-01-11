@@ -1,0 +1,11 @@
+__pycache__
+.mypy_cache
+.venv
+
+# pywikibot
+/user-password.py
+/user-config.py
+/pywikibot.lwp
+/throttle.ctrl
+/apicache-py3/
+/logs/
