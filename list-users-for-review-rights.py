@@ -1,44 +1,20 @@
 #!/usr/bin/python
-# -*- coding: utf-8 -*-
 #
-# Published by zhuyifei1999 (https://wikitech.wikimedia.org/wiki/User:Zhuyifei1999)
-# under the terms of Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)
-# https://creativecommons.org/licenses/by-sa/3.0/
+# (C) 2019 Count Count
+#
+# Distributed under the terms of the MIT license.
 
 from __future__ import unicode_literals
 
-import os
 import re
-import time
-import random
-import signal
-import threading
-import hashlib
 import locale
-import pytz
-import re
-import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import cast, List, Any
 
+import pytz
+
 import pywikibot
-from pywikibot.comms.eventstreams import site_rc_listener
-from pywikibot.diff import PatchManager
-
-# from redis import Redis
-# from redisconfig import KEYSIGN
-
-
-TIMEOUT = 60  # We expect at least one rc entry every minute
-
-
-class TimeoutError(Exception):
-    pass
-
-
-def on_timeout(signum, frame):
-    raise TimeoutError
 
 
 @dataclass
