@@ -51,7 +51,7 @@ class Program:
                 criteriaChecks = self.criteriaChecker.checkUserEligibleForReviewGroup(userData)
                 if not list(filter(lambda criteria: not criteria.met, criteriaChecks)):
                     usersToBePromoted.append(user)
-                else:
+                elif not "autoreview" in user.rights():
                     criteriaChecks = self.criteriaChecker.checkUserEligibleForAutoReviewGroup(userData)
                     if not list(filter(lambda criteria: not criteria.met, criteriaChecks)):
                         usersToBePromotedToAutoReview.append(user)
