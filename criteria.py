@@ -38,10 +38,11 @@ class CriteriaChecker:
 
     def getUserData(self, user: pywikibot.User, endTime: datetime) -> UserData:
         contribs = list(user.contributions(total=5000, start=endTime))
+        articleContribs = list(user.contributions(total=5000, start=endTime, namespace=""))
         return UserData(
             user,
             contribs,
-            [contrib for contrib in contribs if contrib[0].namespace() == 0],
+            articleContribs,
             self.site.logevents(page=f"User:{user.username}"),
             self.getUserRegistrationTimeSafe(user),
         )
