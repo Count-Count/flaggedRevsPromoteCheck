@@ -133,12 +133,12 @@ class CriteriaChecker:
         return criteriaChecks
 
     def checkArticleEditCount(
-        self, articleContribs, minimumEditCount: int, mostRecentEditTime, excludeXDaysBeforeLastEdit: int
+        self, articleContribs, minimumEditCount: int, excludeXDaysBeforeLastEdit: int
     ) -> List[CriteriaCheck]:
         relevantEdits = [
             contrib
             for contrib in articleContribs
-            if contrib[2] < mostRecentEditTime - timedelta(days=excludeXDaysBeforeLastEdit)
+            if contrib[2] < datetime.now() - timedelta(days=excludeXDaysBeforeLastEdit)
         ]
 
         criteriaChecks = []
@@ -275,7 +275,7 @@ class CriteriaChecker:
         criteriaChecks += self.checkGeneralEventLogCriterias(userData.logEntries)
         criteriaChecks += self.checkRegistrationTime(userData.registrationTime, 60)
         criteriaChecks += self.checkEditCount(userData.contribs, 300)
-        criteriaChecks += self.checkArticleEditCount(userData.articleContribs, 300, userData.contribs[0][2], 1)
+        criteriaChecks += self.checkArticleEditCount(userData.articleContribs, 300, 1)
         # TODO: also check for 200 reviewed edits alternative
         criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 15)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.articleContribs, 14)
@@ -290,7 +290,7 @@ class CriteriaChecker:
         criteriaChecks += self.checkGeneralEligibilityForPromotion(userData.user)
         criteriaChecks += self.checkGeneralEventLogCriterias(userData.logEntries)
         criteriaChecks += self.checkRegistrationTime(userData.registrationTime, 30)
-        criteriaChecks += self.checkArticleEditCount(userData.articleContribs, 150, userData.contribs[0][2], 2)
+        criteriaChecks += self.checkArticleEditCount(userData.articleContribs, 150, 2)
         # TODO: also check for 50 reviewed edits alternative
         criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 7)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.articleContribs, 8)
