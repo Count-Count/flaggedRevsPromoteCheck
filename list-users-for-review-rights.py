@@ -58,16 +58,12 @@ class Program:
         print("Aktive Sichter:")
         print(f"{len(usersToBePromoted)} Benutzer gefunden.")
         for user in sorted(usersToBePromoted):
-            print(
-                f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}} ([https://tools.wmflabs.org/flaggedrevspromotioncheck/dewiki/{{{{urlencode:{user.username}|PATH}}}} Kriterien überprüfen])"
-            )
+            print(f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}")
         print()
         print("Passive Sichter:")
         print(f"{len(usersToBePromotedToAutoReview)} Benutzer gefunden.")
         for user in sorted(usersToBePromotedToAutoReview):
-            print(
-                f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}} ([https://tools.wmflabs.org/flaggedrevspromotioncheck/dewiki/{{{{urlencode:{user.username}|PATH}}}} Kriterien überprüfen])"
-            )
+            print(f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}")
 
     def checkSingleUser(self) -> None:
         crit = self.criteriaChecker.checkUserEligibleForReviewGroup(
