@@ -25,8 +25,8 @@ class Program:
 
     def listNewUsers(self) -> None:
         alreadyChecked: Set[str] = set()
-        startTime = datetime(2020, 1, 7)
-        endTime = startTime + timedelta(days=1)
+        startTime = datetime(2020, 1, 11)
+        endTime = startTime + timedelta(hours=24)
         recentChanges = self.site.recentchanges(end=startTime, start=endTime)  # reverse order
         usernames = set()
         for ch in recentChanges:
