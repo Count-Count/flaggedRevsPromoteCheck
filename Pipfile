@@ -13,6 +13,7 @@ flake8-pyi = "*"
 [packages]
 pytz = "*"
 pywikibot = "*"
+flask = "*"
 
 [requires]
 python_version = "3.8"

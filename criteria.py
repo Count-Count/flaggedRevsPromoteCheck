@@ -85,9 +85,9 @@ class CriteriaChecker:
                 wasBlockedBefore = True
                 break
         if hadReviewRightsRemovedBefore:
-            criteriaChecks.append(CriteriaCheck(False, "Dem Benutzer wurden Sicherreichte schon einmal entzogen."))
+            criteriaChecks.append(CriteriaCheck(False, "Dem Benutzer wurden Sicherrechte schon einmal entzogen."))
         else:
-            criteriaChecks.append(CriteriaCheck(True, "Dem Benutzer wurden Sicherreichte noch nie entzogen."))
+            criteriaChecks.append(CriteriaCheck(True, "Dem Benutzer wurden Sicherrechte noch nie entzogen."))
         if wasBlockedBefore:
             criteriaChecks.append(CriteriaCheck(False, "Der Benutzer wurde schon einmal gesperrt."))
         else:
@@ -111,17 +111,25 @@ class CriteriaChecker:
         if not registrationTime:
             raise NotImplementedError
         if registrationTime > datetime.now() - timedelta(days=minimumAgeInDays):
-            criteriaChecks.append(CriteriaCheck(False, "Das Benutzerkonto wurde vor weniger als 60 Tagen angelegt."))
+            criteriaChecks.append(
+                CriteriaCheck(False, f"Das Benutzerkonto wurde vor weniger als {minimumAgeInDays} Tagen angelegt.")
+            )
         else:
-            criteriaChecks.append(CriteriaCheck(True, "Das Benutzerkonto wurde vor mehr als 60 Tagen angelegt."))
+            criteriaChecks.append(
+                CriteriaCheck(True, f"Das Benutzerkonto wurde vor mehr als {minimumAgeInDays} Tagen angelegt.")
+            )
         return criteriaChecks
 
     def checkEditCount(self, contribs, minimumEditCount: int) -> List[CriteriaCheck]:
         criteriaChecks = []
         if len(contribs) < minimumEditCount:
-            criteriaChecks.append(CriteriaCheck(False, "Das Benutzerkonto hat weniger als 300 Bearbeitungen."))
+            criteriaChecks.append(
+                CriteriaCheck(False, f"Das Benutzerkonto hat weniger als {minimumEditCount} Bearbeitungen.")
+            )
         else:
-            criteriaChecks.append(CriteriaCheck(True, "Das Benutzerkonto hat mindestens 300 Bearbeitungen."))
+            criteriaChecks.append(
+                CriteriaCheck(True, f"Das Benutzerkonto hat mindestens {minimumEditCount} Bearbeitungen.")
+            )
         return criteriaChecks
 
     def checkArticleEditCount(
@@ -136,11 +144,29 @@ class CriteriaChecker:
         criteriaChecks = []
         if len(relevantEdits) < minimumEditCount:
             criteriaChecks.append(
-                CriteriaCheck(False, "Das Benutzerkonto hat weniger als 300 Bearbeitungen im Artikelnamensraum.")
+                CriteriaCheck(
+                    False,
+                    f"Das Benutzerkonto hat weniger als {minimumEditCount} Bearbeitungen im Artikelnamensraum. Änderungen "
+                    + (
+                        "des letzten Tages"
+                        if excludeXDaysBeforeLastEdit == 1
+                        else f"der letzten {excludeXDaysBeforeLastEdit} Tage"
+                    )
+                    + " wurden nicht berücksichtigt.",
+                )
             )
         else:
             criteriaChecks.append(
-                CriteriaCheck(True, "Das Benutzerkonto hat mehr als 300 Bearbeitungen im Artikelnamensraum.")
+                CriteriaCheck(
+                    True,
+                    f"Das Benutzerkonto hat mehr als {minimumEditCount} Bearbeitungen im Artikelnamensraum. Änderungen "
+                    + (
+                        "des letzten Tages"
+                        if excludeXDaysBeforeLastEdit == 1
+                        else f"der letzten {excludeXDaysBeforeLastEdit} Tage"
+                    )
+                    + " wurden nicht berücksichtigt.",
+                )
             )
         return criteriaChecks
 
@@ -149,11 +175,17 @@ class CriteriaChecker:
         articlePageCount = len(set([contrib[0].title() for contrib in articleContribs]))
         if articlePageCount < minimumSeparatePages:
             criteriaChecks.append(
-                CriteriaCheck(False, "Das Benutzerkonto hat weniger als 14 verschiedene Seiten im ANR bearbeitet.")
+                CriteriaCheck(
+                    False,
+                    f"Das Benutzerkonto hat weniger als {minimumSeparatePages} verschiedene Seiten im ANR bearbeitet.",
+                )
             )
         else:
             criteriaChecks.append(
-                CriteriaCheck(True, "Das Benutzerkonto hat mehr als 14 verschiedene Seiten im ANR bearbeitet.")
+                CriteriaCheck(
+                    True,
+                    f"Das Benutzerkonto hat mehr als {minimumSeparatePages} verschiedene Seiten im ANR bearbeitet.",
+                )
             )
         return criteriaChecks
 
@@ -169,19 +201,22 @@ class CriteriaChecker:
             if spacedEditCount < minimumSpacedEdits:
                 criteriaChecks.append(
                     CriteriaCheck(
-                        False, "Das Benutzerkonto hat weniger als 15 Bearbeitungen mit mindestens drei Tagen Abstand."
+                        False,
+                        f"Das Benutzerkonto hat weniger als {minimumSpacedEdits} Bearbeitungen mit mindestens drei Tagen Abstand.",
                     )
                 )
             else:
                 criteriaChecks.append(
                     CriteriaCheck(
-                        True, "Das Benutzerkonto hat mindestens 15 Bearbeitungen mit mindestens drei Tagen Abstand."
+                        True,
+                        f"Das Benutzerkonto hat mindestens {minimumSpacedEdits} Bearbeitungen mit mindestens drei Tagen Abstand.",
                     )
                 )
         else:
             criteriaChecks.append(
                 CriteriaCheck(
-                    False, "Das Benutzerkonto hat weniger als 15 Bearbeitungen mit mindestens drei Tagen Abstand."
+                    False,
+                    f"Das Benutzerkonto hat weniger als {minimumSpacedEdits} Bearbeitungen mit mindestens drei Tagen Abstand.",
                 )
             )
         return criteriaChecks
@@ -202,14 +237,14 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    "Das Benutzerkonto hat bei weniger als 30 Bearbeitungen aktiv die Zusammenfassungszeile genutzt.",
+                    f"Das Benutzerkonto hat bei weniger als {minimumEditsWithCustomSummary} Bearbeitungen aktiv die Zusammenfassungszeile genutzt.",
                 )
             )
         else:
             criteriaChecks.append(
                 CriteriaCheck(
                     True,
-                    "Das Benutzerkonto hat bei mindestens 30 Bearbeitungen aktiv die Zusammenfassungszeile genutzt.",
+                    f"Das Benutzerkonto hat bei mindestens {minimumEditsWithCustomSummary} Bearbeitungen aktiv die Zusammenfassungszeile genutzt.",
                 )
             )
         return criteriaChecks
@@ -221,12 +256,16 @@ class CriteriaChecker:
         ):
             criteriaChecks.append(
                 CriteriaCheck(
-                    False, "Das Benutzerkonto hat in den letzten 30 Tagen weniger als fünf Bearbeitungen im ANR."
+                    False,
+                    f"Das Benutzerkonto hat in den letzten 30 Tagen weniger als {minimumEditCount} Bearbeitungen im ANR.",
                 )
             )
         else:
             criteriaChecks.append(
-                CriteriaCheck(True, "Das Benutzerkonto hat in den letzten 30 Tagen mehr als fünf Bearbeitungen im ANR.")
+                CriteriaCheck(
+                    True,
+                    f"Das Benutzerkonto hat in den letzten 30 Tagen mehr als {minimumEditCount} Bearbeitungen im ANR.",
+                )
             )
         return criteriaChecks
 
@@ -255,7 +294,6 @@ class CriteriaChecker:
         # TODO: also check for 50 reviewed edits alternative
         criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 7)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.articleContribs, 8)
-        criteriaChecks += self.checkRecentArticleEditCount(userData.articleContribs, 5, 30)
         criteriaChecks += self.checkCustomSummaryEditCount(userData.contribs, 20)
 
         return criteriaChecks

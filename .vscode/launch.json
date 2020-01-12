@@ -22,5 +22,12 @@
                 "--run-bot",
             ]
         },
+        {
+            "name": "server",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/server.py",
+            "console": "integratedTerminal",
+        },
     ]
 }
