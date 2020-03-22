@@ -97,7 +97,7 @@ class CriteriaChecker:
                 rightsEv = cast(pywikibot.logentries.RightsEntry, ev)
                 if rightsEv.oldgroups is None or rightsEv.newgroups is None:
                     continue
-                if "review" in rightsEv.oldgroups and not "review" in rightsEv.newgroups:
+                if "editor" in rightsEv.oldgroups and not "editor" in rightsEv.newgroups:
                     hadReviewRightsRemovedBefore = True
                     break
                 if "autoreview" in rightsEv.oldgroups and not "autoreview" in rightsEv.newgroups:
