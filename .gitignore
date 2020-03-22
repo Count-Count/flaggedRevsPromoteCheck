@@ -1,6 +1,7 @@
 __pycache__
 .mypy_cache
 .venv
+replica.my.cnf
 
 # pywikibot
 /user-password.py

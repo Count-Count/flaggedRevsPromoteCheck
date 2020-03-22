@@ -9,11 +9,13 @@ from __future__ import unicode_literals
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast, List, Any
+from typing import cast, List, Any, Dict
 
 import pytz
 
 import pywikibot
+import re
+from pywikibot.data import mysql
 
 
 @dataclass
@@ -29,12 +31,30 @@ class UserData:
     articleContribs: List[Any]
     logEntries: List[Any]
     registrationTime: datetime
+    flaggedRevsUserParams: Dict[str, str]
 
 
 class CriteriaChecker:
     def __init__(self, site) -> None:
         self.site = site
         self.timezone = pytz.timezone("Europe/Berlin")
+
+    def getFlaggedRevsUserParams(self, user: pywikibot.User) -> Dict[str, str]:
+        res = list(
+            mysql.mysql_query(
+                "SELECT frp_user_params from flaggedrevs_promote,user where user_id=frp_user_id and user_name=%s limit 1",
+                dbname="dewiki",
+                params=user.username,
+            )
+        )
+        rawParams = re.split("\n", res[0][0].decode())
+        params = {}
+        for rawParam in rawParams:
+            match = re.match("(.*)=(.*)", rawParam)
+            if not match:
+                raise Exception(f"Unexpected flaggedRevs user param format in line {rawParam}")
+            params[match.group(1)] = match.group(2)
+        return params
 
     def getUserData(self, user: pywikibot.User, endTime: datetime) -> UserData:
         contribs = list(user.contributions(total=5000, start=endTime))
@@ -45,6 +65,7 @@ class CriteriaChecker:
             articleContribs,
             self.site.logevents(page=f"User:{user.username}"),
             self.getUserRegistrationTimeSafe(user),
+            self.getFlaggedRevsUserParams(user),
         )
 
     def getUserRegistrationTimeSafe(self, user: pywikibot.User) -> datetime:
@@ -283,6 +304,25 @@ class CriteriaChecker:
             )
         return criteriaChecks
 
+    def checkRevertCountRatio(self, contribs, flaggedRevsUserParams, maxRatio):
+        criteriaChecks = []
+        actRatio = float(flaggedRevsUserParams["revertedEdits"]) / len(contribs)
+        if actRatio > maxRatio:
+            criteriaChecks.append(
+                CriteriaCheck(
+                    False,
+                    f"Das Benutzerkonto hat mit {actRatio*100:0.2f}% einen zu großen Anteil an zurückgesetzten Bearbeitungen. Maximal {maxRatio*100:0.0f}% sind erlaubt.",
+                )
+            )
+        else:
+            criteriaChecks.append(
+                CriteriaCheck(
+                    True,
+                    f"Das Benutzerkonto hat mit {actRatio*100:0.2f}% weniger als den maximal erlaubten Anteil an zurückgesetzten Bearbeitungen ({maxRatio*100:0.0f}%).",
+                )
+            )
+        return criteriaChecks
+
     def checkUserEligibleForReviewGroup(self, userData: UserData) -> List[CriteriaCheck]:
         criteriaChecks: List[CriteriaCheck] = []
         criteriaChecks += self.checkGeneralEligibilityForPromotion(userData.user)
@@ -295,7 +335,7 @@ class CriteriaChecker:
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.articleContribs, 14)
         criteriaChecks += self.checkRecentArticleEditCount(userData.articleContribs, 5, 30)
         criteriaChecks += self.checkCustomSummaryEditCount(userData.contribs, 30)
-        # TODO: check revert ratio
+        criteriaChecks += self.checkRevertCountRatio(userData.contribs, userData.flaggedRevsUserParams, 0.03)
 
         return criteriaChecks
 
