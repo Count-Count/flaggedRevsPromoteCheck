@@ -10,6 +10,8 @@ import locale
 from datetime import datetime, timedelta
 from typing import cast, List, Any, Set
 
+import os
+
 import pytz
 import pywikibot
 
@@ -23,9 +25,14 @@ class Program:
         self.timezone = pytz.timezone("Europe/Berlin")
         self.criteriaChecker = CriteriaChecker(self.site)
 
+    @staticmethod
+    def getDateString(date: int) -> str:
+        dayFormat = "%-d" if os.name != "nt" else "%d"
+        return date.strftime(f"{dayFormat}. %B %Y")
+
     def listNewUsers(self) -> None:
-        alreadyChecked: Set[str] = set()
-        startTime = datetime(2020, 1, 11)
+        h24Ago = datetime.now() - timedelta(days=1)
+        startTime = datetime(h24Ago.year, h24Ago.month, h24Ago.day, 0, 0, 0)
         endTime = startTime + timedelta(hours=24)
         recentChanges = self.site.recentchanges(end=startTime, start=endTime)  # reverse order
         usernames = set()
@@ -39,12 +46,9 @@ class Program:
         print(f"Checking {len(usernames)} users for {startTime}...")
         count = 0
         for username in usernames:
-            if username in alreadyChecked:
-                continue
-            alreadyChecked.add(username)
             count += 1
-            # if count % 100 == 0:
-            #     print(f"Checked {count} users.")
+            if count % 100 == 0:
+                print(f"Checked {count} users.")
             user = pywikibot.User(self.site, username)
             if not "review" in user.rights():
                 userData = self.criteriaChecker.getUserData(user, endTime)
@@ -55,15 +59,21 @@ class Program:
                     criteriaChecks = self.criteriaChecker.checkUserEligibleForAutoReviewGroup(userData)
                     if not list(filter(lambda criteria: not criteria.met, criteriaChecks)):
                         usersToBePromotedToAutoReview.append(user)
-        print("Aktive Sichter:")
-        print(f"{len(usersToBePromoted)} Benutzer gefunden.")
+        newSection = f"\n== {self.getDateString(startTime)} ==\n"
+        newSection += "; Kandidaten für aktive Sichterrechte\n"
+        #        print(f"{len(usersToBePromoted)} Benutzer gefunden.")
         for user in sorted(usersToBePromoted):
-            print(f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}")
-        print()
-        print("Passive Sichter:")
-        print(f"{len(usersToBePromotedToAutoReview)} Benutzer gefunden.")
+            newSection += f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}\n"
+        newSection += "\n"
+        newSection += "; Kandidaten für passive Sichterrechte\n"
+        #        print(f"{len(usersToBePromotedToAutoReview)} Benutzer gefunden.")
         for user in sorted(usersToBePromotedToAutoReview):
-            print(f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}")
+            newSection += f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}\n"
+        page = pywikibot.Page(self.site, "Wikipedia:Gesichtete Versionen/Rechtevergabe/Botliste")
+        page.text += newSection
+        page.save(summary=f"Neue Kandidaten für den {self.getDateString(startTime)} hinzugefügt.")
+
+        print(newSection)
 
     def checkSingleUser(self) -> None:
         crit = self.criteriaChecker.checkUserEligibleForReviewGroup(

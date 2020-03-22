@@ -23,6 +23,16 @@
             ]
         },
         {
+            "name": "list users prod!",
+            "type": "python",
+            "request": "launch",
+            "program": "${workspaceFolder}/list-users-for-review-rights.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--run-bot",
+            ]
+        },
+        {
             "name": "server",
             "type": "python",
             "request": "launch",
