@@ -111,13 +111,20 @@ class CriteriaChecker:
         criteriaChecks = []
         if not registrationTime:
             raise NotImplementedError
+        ageInDays = (datetime.now() - registrationTime).days
         if registrationTime > datetime.now() - timedelta(days=minimumAgeInDays):
             criteriaChecks.append(
-                CriteriaCheck(False, f"Das Benutzerkonto wurde vor weniger als {minimumAgeInDays} Tagen angelegt.")
+                CriteriaCheck(
+                    False,
+                    f"Das Benutzerkonto wurde erst vor {ageInDays} Tagen angelegt. Es muss aber mindestens {minimumAgeInDays} Tage alt sein.",
+                )
             )
         else:
             criteriaChecks.append(
-                CriteriaCheck(True, f"Das Benutzerkonto wurde vor mehr als {minimumAgeInDays} Tagen angelegt.")
+                CriteriaCheck(
+                    True,
+                    f"Das Benutzerkonto wurde vor {ageInDays} Tagen angelegt. Das sind mehr als die benötigten {minimumAgeInDays} Tage.",
+                )
             )
         return criteriaChecks
 
@@ -125,11 +132,17 @@ class CriteriaChecker:
         criteriaChecks = []
         if len(contribs) < minimumEditCount:
             criteriaChecks.append(
-                CriteriaCheck(False, f"Das Benutzerkonto hat weniger als {minimumEditCount} Bearbeitungen.")
+                CriteriaCheck(
+                    False,
+                    f"Das Benutzerkonto hat mit {len(contribs)} Bearbeitungen weniger als die benötigten {minimumEditCount}.",
+                )
             )
         else:
             criteriaChecks.append(
-                CriteriaCheck(True, f"Das Benutzerkonto hat mindestens {minimumEditCount} Bearbeitungen.")
+                CriteriaCheck(
+                    True,
+                    f"Das Benutzerkonto hat mit {len(contribs)} Bearbeitungen mehr als die benötigten {minimumEditCount}.",
+                )
             )
         return criteriaChecks
 
@@ -147,7 +160,7 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat weniger als {minimumEditCount} Bearbeitungen im Artikelnamensraum. Änderungen "
+                    f"Das Benutzerkonto hat mit {len(relevantEdits)} Bearbeitungen im Artikelnamensraum weniger als die benötigten {minimumEditCount}. Änderungen "
                     + (
                         "des letzten Tages"
                         if excludeXDaysBeforeLastEdit == 1
@@ -160,7 +173,7 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     True,
-                    f"Das Benutzerkonto hat mehr als {minimumEditCount} Bearbeitungen im Artikelnamensraum. Änderungen "
+                    f"Das Benutzerkonto hat mit {len(relevantEdits)} Bearbeitungen im Artikelnamensraum mehr als die benötigten {minimumEditCount}. Änderungen "
                     + (
                         "des letzten Tages"
                         if excludeXDaysBeforeLastEdit == 1
@@ -178,14 +191,14 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat weniger als {minimumSeparatePages} verschiedene Seiten im ANR bearbeitet.",
+                    f"Das Benutzerkonto hat nur {articlePageCount} verschiedene Seiten im ANR bearbeitet. Das sind weniger als die benötigten mehr als {minimumSeparatePages} Seiten.",
                 )
             )
         else:
             criteriaChecks.append(
                 CriteriaCheck(
                     True,
-                    f"Das Benutzerkonto hat mehr als {minimumSeparatePages} verschiedene Seiten im ANR bearbeitet.",
+                    f"Das Benutzerkonto hat mit {articlePageCount} verschiedene Seiten im ANR bearbeitet. Damit ist die benötigte Mindestanzahl von {minimumSeparatePages} erreicht.",
                 )
             )
         return criteriaChecks
@@ -203,21 +216,21 @@ class CriteriaChecker:
                 criteriaChecks.append(
                     CriteriaCheck(
                         False,
-                        f"Das Benutzerkonto hat weniger als {minimumSpacedEdits} Bearbeitungen mit mindestens drei Tagen Abstand.",
+                        f"Das Benutzerkonto hat mit {spacedEditCount} Bearbeitungen, die untereinander einen Mindestabstand von jeweils 3 Tagen aufweisen, weniger als die benötigten {minimumSpacedEdits}.",
                     )
                 )
             else:
                 criteriaChecks.append(
                     CriteriaCheck(
                         True,
-                        f"Das Benutzerkonto hat mindestens {minimumSpacedEdits} Bearbeitungen mit mindestens drei Tagen Abstand.",
+                        f"Das Benutzerkonto hat mit {spacedEditCount} Bearbeitungen, die untereinander einen Mindestabstand von jeweils 3 Tagen aufweisen, die benötigte Anzahl von {minimumSpacedEdits} erreicht.",
                     )
                 )
         else:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat weniger als {minimumSpacedEdits} Bearbeitungen mit mindestens drei Tagen Abstand.",
+                    f"Das Benutzerkonto hat noch keine Bearbeitungen, und damit auch weniger als {minimumSpacedEdits} Bearbeitungen mit mindestens drei Tagen Abstand.",
                 )
             )
         return criteriaChecks
@@ -238,14 +251,14 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat bei weniger als {minimumEditsWithCustomSummary} Bearbeitungen aktiv die Zusammenfassungszeile genutzt.",
+                    f"Das Benutzerkonto hat nur bei {customSummaryCount} Bearbeitungen aktiv die Zusammenfassungszeile genutzt. Das sind weniger als die benötigten {minimumEditsWithCustomSummary} Bearbeitungen.",
                 )
             )
         else:
             criteriaChecks.append(
                 CriteriaCheck(
                     True,
-                    f"Das Benutzerkonto hat bei mindestens {minimumEditsWithCustomSummary} Bearbeitungen aktiv die Zusammenfassungszeile genutzt.",
+                    f"Das Benutzerkonto hat bei {customSummaryCount} Bearbeitungen aktiv die Zusammenfassungszeile genutzt. Das sind mehr als die benötigten {minimumEditsWithCustomSummary} Bearbeitungen.",
                 )
             )
         return criteriaChecks
@@ -258,14 +271,14 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat in den letzten 30 Tagen weniger als {minimumEditCount} Bearbeitungen im ANR.",
+                    f"Das Benutzerkonto hat mit in den letzten 30 Tagen weniger als die benötigten {minimumEditCount}.",
                 )
             )
         else:
             criteriaChecks.append(
                 CriteriaCheck(
                     True,
-                    f"Das Benutzerkonto hat in den letzten 30 Tagen mehr als {minimumEditCount} Bearbeitungen im ANR.",
+                    f"Das Benutzerkonto hat in den letzten 30 Tagen mehr als die benötigten {minimumEditCount} Bearbeitungen im ANR.",
                 )
             )
         return criteriaChecks
