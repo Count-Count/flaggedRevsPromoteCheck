@@ -59,7 +59,7 @@ class Program:
                     criteriaChecks = self.criteriaChecker.checkUserEligibleForAutoReviewGroup(userData)
                     if not list(filter(lambda criteria: not criteria.met, criteriaChecks)):
                         usersToBePromotedToAutoReview.append(user)
-        newSection = f"\n== {self.getDateString(startTime)} ==\n"
+        newSection = f"\n\n== {self.getDateString(startTime)} ==\n"
         newSection += "; Kandidaten für aktive Sichterrechte\n"
         #        print(f"{len(usersToBePromoted)} Benutzer gefunden.")
         for user in sorted(usersToBePromoted):
