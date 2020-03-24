@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from typing import cast, List, Any, Set
 
 import os
+import re
 
 import pytz
 import pywikibot
@@ -30,7 +31,26 @@ class Program:
         dayFormat = "%-d" if os.name != "nt" else "%d"
         return date.strftime(f"{dayFormat}. %B %Y")
 
+    def getAlreadyReportedCandidates(self) -> Set[str]:
+        page = pywikibot.Page(self.site, "Wikipedia:Gesichtete Versionen/Rechtevergabe/Botliste")
+        self.site.loadrevisions(page, rvdir=True, content=True, user=self.site.user())
+        actualRevs = page._revisions.values()
+        newText = None
+        res = set()
+        for rev in [x for x in actualRevs]:
+            oldText = page.getOldVersion(rev.parent_id) if not newText else newText
+            newText = rev.text
+            addedText = newText[len(oldText) :]
+            for match in re.compile(r"\{\{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage\|([^}]+)\}\}").finditer(
+                addedText
+            ):
+                user = match.group(1)
+                res.add(user)
+
+        return res
+
     def listNewUsers(self) -> None:
+        alreadyReportedCandidates = self.getAlreadyReportedCandidates()
         h24Ago = datetime.now() - timedelta(days=1)
         startTime = datetime(h24Ago.year, h24Ago.month, h24Ago.day, 0, 0, 0)
         endTime = startTime + timedelta(hours=24)
@@ -43,6 +63,7 @@ class Program:
                 usernames.add(ch["user"])
         usersToBePromoted = []
         usersToBePromotedToAutoReview = []
+        usernames.difference_update(alreadyReportedCandidates)
         print(f"Checking {len(usernames)} users for {startTime}...")
         count = 0
         for username in usernames:
