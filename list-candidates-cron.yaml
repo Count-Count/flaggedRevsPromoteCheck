@@ -1,0 +1,26 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: list-candidates
+  labels:
+    name: list-candidates
+    # The toolforge=tool label will cause $HOME and other paths to be mounted from Toolforge
+    toolforge: tool
+spec:
+  schedule: "10 8 * * *"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            toolforge: tool
+        spec:
+          containers:
+          - name: bot
+            workingDir: /data/project/flaggedrevspromotioncheck/www/python/src
+            image: docker-registry.tools.wmflabs.org/toolforge-python37-sssd-base:latest
+            args:
+            - /data/project/flaggedrevspromotioncheck/www/python/venv/bin/python
+            - list-users-for-review-rights.py 
+            env:
+          restartPolicy: Never
