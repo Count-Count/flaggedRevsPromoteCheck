@@ -7,6 +7,7 @@
 from __future__ import unicode_literals
 
 import locale
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import cast, List, Any, Set
 
@@ -17,6 +18,12 @@ import pytz
 import pywikibot
 
 from criteria import CriteriaChecker
+
+
+@dataclass
+class AlreadyReportedCandidates:
+    reviewCandidates: Set[str]
+    autoReviewCandidates: Set[str]
 
 
 class Program:
@@ -31,23 +38,29 @@ class Program:
         dayFormat = "%-d" if os.name != "nt" else "%d"
         return date.strftime(f"{dayFormat}. %B %Y")
 
-    def getAlreadyReportedCandidates(self) -> Set[str]:
+    def getAlreadyReportedCandidates(self) -> AlreadyReportedCandidates:
         page = pywikibot.Page(self.site, "Wikipedia:Gesichtete Versionen/Rechtevergabe/Botliste")
         self.site.loadrevisions(page, rvdir=True, content=True, user=self.site.user())
         actualRevs = page._revisions.values()
         newText = None
-        res = set()
+        reviewCandidates = set()
+        autoReviewCandidates = set()
+        pattern = re.compile(r"\{\{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage\|([^}]+)\}\}")
         for rev in [x for x in actualRevs]:
             oldText = page.getOldVersion(rev.parent_id) if not newText else newText
             newText = rev.text
             addedText = newText[len(oldText) :]
-            for match in re.compile(r"\{\{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage\|([^}]+)\}\}").finditer(
-                addedText
-            ):
-                user = match.group(1)
-                res.add(user)
+            targetSet = set()
+            for line in addedText.split("\n"):
+                if line == "; Kandidaten für aktive Sichterrechte":
+                    targetSet = reviewCandidates
+                elif line == "; Kandidaten für passive Sichterrechte":
+                    targetSet = autoReviewCandidates
+                for match in pattern.finditer(line):
+                    user = match.group(1)
+                    targetSet.add(user)
 
-        return res
+        return AlreadyReportedCandidates(reviewCandidates, autoReviewCandidates)
 
     def listNewUsers(self) -> None:
         alreadyReportedCandidates = self.getAlreadyReportedCandidates()
@@ -63,7 +76,6 @@ class Program:
                 usernames.add(ch["user"])
         usersToBePromoted = []
         usersToBePromotedToAutoReview = []
-        usernames.difference_update(alreadyReportedCandidates)
         print(f"Checking {len(usernames)} users for {startTime}...")
         count = 0
         for username in usernames:
@@ -73,13 +85,22 @@ class Program:
             user = pywikibot.User(self.site, username)
             if not "review" in user.rights():
                 userData = self.criteriaChecker.getUserData(user, endTime)
-                criteriaChecks = self.criteriaChecker.checkUserEligibleForReviewGroup(userData)
-                if not list(filter(lambda criteria: not criteria.met, criteriaChecks)):
+
+                # check for review rights
+                reviewCriteriaChecks = self.criteriaChecker.checkUserEligibleForReviewGroup(userData)
+                eligibleForReview = not list(filter(lambda criteria: not criteria.met, reviewCriteriaChecks))
+                if eligibleForReview and not username in alreadyReportedCandidates.reviewCandidates:
                     usersToBePromoted.append(user)
-                elif not "autoreview" in user.rights():
-                    criteriaChecks = self.criteriaChecker.checkUserEligibleForAutoReviewGroup(userData)
-                    if not list(filter(lambda criteria: not criteria.met, criteriaChecks)):
-                        usersToBePromotedToAutoReview.append(user)
+                    continue
+
+                # check for autoreview rights
+                if "autoreview" in user.rights() or username in alreadyReportedCandidates.autoReviewCandidates:
+                    continue
+                autoReviewCriteriaChecks = self.criteriaChecker.checkUserEligibleForAutoReviewGroup(userData)
+                eligibleForAutoReview = not list(filter(lambda criteria: not criteria.met, autoReviewCriteriaChecks))
+                if eligibleForAutoReview:
+                    usersToBePromotedToAutoReview.append(user)
+
         newSection = f"\n\n== {self.getDateString(startTime)} ==\n"
         newSection += "; Kandidaten für aktive Sichterrechte\n"
         #        print(f"{len(usersToBePromoted)} Benutzer gefunden.")
