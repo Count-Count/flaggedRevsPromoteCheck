@@ -83,13 +83,23 @@ class Program:
         newSection = f"\n\n== {self.getDateString(startTime)} ==\n"
         newSection += "; Kandidaten für aktive Sichterrechte\n"
         #        print(f"{len(usersToBePromoted)} Benutzer gefunden.")
-        for user in sorted(usersToBePromoted):
-            newSection += f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}\n"
+        if usersToBePromoted:
+            for user in sorted(usersToBePromoted):
+                newSection += f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}\n"
+        else:
+            newSection += f":''keine''\n"
         newSection += "\n"
         newSection += "; Kandidaten für passive Sichterrechte\n"
         #        print(f"{len(usersToBePromotedToAutoReview)} Benutzer gefunden.")
-        for user in sorted(usersToBePromotedToAutoReview):
-            newSection += f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}\n"
+        if usersToBePromotedToAutoReview:
+            for user in sorted(usersToBePromotedToAutoReview):
+                newSection += f"* {{{{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage|{user.username}}}}}\n"
+        else:
+            newSection += f":''keine''\n"
+
+        if not usersToBePromoted and not usersToBePromotedToAutoReview:
+            newSection += f"{{Erledigt|--~~~~}}\n"
+
         page = pywikibot.Page(self.site, "Wikipedia:Gesichtete Versionen/Rechtevergabe/Botliste")
         page.text += newSection
         page.save(summary=f"Neue Kandidaten für den {self.getDateString(startTime)} hinzugefügt.")
