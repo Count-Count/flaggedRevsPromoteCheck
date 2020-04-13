@@ -293,7 +293,7 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat mit in den letzten 30 Tagen weniger als die benötigten {minimumEditCount}.",
+                    f"Das Benutzerkonto hat mit in den letzten 30 Tagen weniger als die benötigten {minimumEditCount} Bearbeitungen im ANR.",
                 )
             )
         else:
