@@ -130,7 +130,7 @@ class Program:
     def checkSingleUser(self) -> None:
         crit = self.criteriaChecker.checkUserEligibleForReviewGroup(
             self.criteriaChecker.getUserData(
-                pywikibot.User(self.criteriaChecker.site, "Benutzer:AusZeit"), datetime(2020, 1, 6)
+                pywikibot.User(self.criteriaChecker.site, "Benutzer:Beson"), datetime(2020, 1, 6)
             )
         )
         if list(filter(lambda criteria: not criteria.met, crit)):
