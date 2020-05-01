@@ -119,7 +119,7 @@ class Program:
             newSection += f":''keine''\n"
 
         if not usersToBePromoted and not usersToBePromotedToAutoReview:
-            newSection += f"{{Erledigt|--~~~~}}\n"
+            newSection += f"{{{{Erledigt|--~~~~}}}}\n"
 
         page = pywikibot.Page(self.site, "Wikipedia:Gesichtete Versionen/Rechtevergabe/Botliste")
         page.text += newSection
