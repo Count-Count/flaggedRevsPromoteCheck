@@ -209,7 +209,7 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     True,
-                    f"Das Benutzerkonto hat mit {articlePageCount} verschiedene Seiten im ANR bearbeitet. Damit ist die benötigte Mindestanzahl von {minimumSeparatePages} erreicht.",
+                    f"Das Benutzerkonto hat {articlePageCount} verschiedene Seiten im ANR bearbeitet. Damit ist die benötigte Mindestanzahl von {minimumSeparatePages} erreicht.",
                 )
             )
         return criteriaChecks
