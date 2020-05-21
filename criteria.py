@@ -382,7 +382,6 @@ class CriteriaChecker:
         criteriaChecks += self.checkArticleEditCountOrFlaggedEditCount(
             userData.flaggedRevsUserParams, userData.flaggedEditCount, 300, 200
         )
-        # TODO: also check for 200 reviewed edits alternative
         criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 15)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.flaggedRevsUserParams, 14)
         criteriaChecks += self.checkRecentArticleEditCount(userData.articleContribs, 5, 30)
@@ -399,7 +398,6 @@ class CriteriaChecker:
         criteriaChecks += self.checkArticleEditCountOrFlaggedEditCount(
             userData.flaggedRevsUserParams, userData.flaggedEditCount, 150, 50
         )
-        # TODO: also check for 50 reviewed edits alternative
         criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 7)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.flaggedRevsUserParams, 8)
         criteriaChecks += self.checkCustomSummaryEditCount(userData.flaggedRevsUserParams, 20)
