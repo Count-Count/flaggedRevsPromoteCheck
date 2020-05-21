@@ -86,6 +86,7 @@ class CriteriaChecker:
         return flaggedEdits
 
     def getFlaggedEditCount(self, user: pywikibot.User, exactResults: bool) -> int:
+        (_, _, lastEditTimestamp, _) = user.last_edit
         contribsRequest = pywikibot.data.api.Request(
             site=self.site,
             parameters={
@@ -95,6 +96,7 @@ class CriteriaChecker:
                 "uclimit": "5000",
                 "ucuser": user.username,
                 "ucnamespace": "0|6|10|14|828",
+                "ucstart": lastEditTimestamp - timedelta(days=2),
             },
         )
         data = contribsRequest.submit()
