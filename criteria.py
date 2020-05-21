@@ -94,7 +94,7 @@ class CriteriaChecker:
                 "list": "usercontribs",
                 "uclimit": "5000",
                 "ucuser": user.username,
-                "ucnamespace": "0|10",
+                "ucnamespace": "0|6|10|14|828",
             },
         )
         data = contribsRequest.submit()
