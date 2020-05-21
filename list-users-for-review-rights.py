@@ -84,7 +84,7 @@ class Program:
                 print(f"Checked {count} users.")
             user = pywikibot.User(self.site, username)
             if not "review" in user.rights():
-                userData = self.criteriaChecker.getUserData(user, endTime)
+                userData = self.criteriaChecker.getUserData(user, endTime, False)
 
                 # check for review rights
                 reviewCriteriaChecks = self.criteriaChecker.checkUserEligibleForReviewGroup(userData)
@@ -130,7 +130,7 @@ class Program:
     def checkSingleUser(self) -> None:
         crit = self.criteriaChecker.checkUserEligibleForReviewGroup(
             self.criteriaChecker.getUserData(
-                pywikibot.User(self.criteriaChecker.site, "Benutzer:Beson"), datetime(2020, 1, 6)
+                pywikibot.User(self.criteriaChecker.site, "Benutzer:Beson"), datetime(2020, 1, 6), False
             )
         )
         if list(filter(lambda criteria: not criteria.met, crit)):

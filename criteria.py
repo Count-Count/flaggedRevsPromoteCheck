@@ -14,7 +14,6 @@ from typing import cast, List, Any, Dict
 import pytz
 
 import pywikibot
-import re
 from pywikibot.data import mysql
 
 
@@ -30,6 +29,7 @@ class UserData:
     editCount: int
     contribs: List[Any]
     articleContribs: List[Any]
+    flaggedEditCount: int
     logEntries: List[Any]
     registrationTime: datetime
     flaggedRevsUserParams: Dict[str, str]
@@ -58,14 +58,65 @@ class CriteriaChecker:
                 params[match.group(1)] = match.group(2)
         return params
 
-    def getUserData(self, user: pywikibot.User, endTime: datetime) -> UserData:
+    def getFlaggedRevisionCount(self, contribs) -> int:
+        revs = ""
+        for contrib in contribs:
+            if contrib["ns"] == 0 or contrib["ns"] == pywikibot.site.Namespace.TEMPLATE:
+                if len(revs) != 0:
+                    revs += "|"
+                revs += str(contrib["revid"])
+        flaggedEdits = 0
+        if len(revs) != 0:
+            revisionsRequest = pywikibot.data.api.Request(
+                site=self.site,
+                parameters={
+                    "action": "query",
+                    "format": "json",
+                    "prop": "revisions",
+                    "rvprop": "flagged|ids",
+                    "revids": revs,
+                },
+            )
+            data = revisionsRequest.submit()
+            pages = data["query"]["pages"]
+            for page in pages:
+                for revision in pages[page]["revisions"]:
+                    if "flagged" in revision:
+                        flaggedEdits += 1
+        return flaggedEdits
+
+    def getFlaggedEditCount(self, user: pywikibot.User, exactResults: bool) -> int:
+        contribsRequest = pywikibot.data.api.Request(
+            site=self.site,
+            parameters={
+                "action": "query",
+                "format": "json",
+                "list": "usercontribs",
+                "uclimit": "5000",
+                "ucuser": user.username,
+                "ucnamespace": "0|10",
+            },
+        )
+        data = contribsRequest.submit()
+        contribs = data["query"]["usercontribs"]
+        flaggedEdits = self.getFlaggedRevisionCount(contribs[:500])
+        contribsRest = contribs[500:]
+        while contribsRest and (exactResults or flaggedEdits < 200):
+            contribsPart = contribsRest[:500]
+            contribsRest = contribsRest[500:]
+            flaggedEdits += self.getFlaggedRevisionCount(contribsPart)
+        return flaggedEdits
+
+    def getUserData(self, user: pywikibot.User, endTime: datetime, exactResults: bool) -> UserData:
         contribs = list(user.contributions(total=5000, start=endTime))
         articleContribs = list(user.contributions(total=5000, start=endTime, namespace=""))
+        flaggedEditCount = self.getFlaggedEditCount(user, exactResults)
         return UserData(
             user,
             user.editCount,
             contribs,
             articleContribs,
+            flaggedEditCount,
             self.site.logevents(page=f"User:{user.username}"),
             self.getUserRegistrationTimeSafe(user),
             self.getFlaggedRevsUserParams(user),
@@ -170,24 +221,35 @@ class CriteriaChecker:
             )
         return criteriaChecks
 
-    def checkArticleEditCount(self, flaggedRevsUserParams, minimumEditCount: int) -> List[CriteriaCheck]:
+    def checkArticleEditCountOrFlaggedEditCount(
+        self, flaggedRevsUserParams, flaggedEditCount: int, minimumEditCount: int, minimumFlaggedEditCount: int
+    ) -> List[CriteriaCheck]:
         criteriaChecks = []
+
         totalContentEdits = (
             int(flaggedRevsUserParams["totalContentEdits"]) if "totalContentEdits" in flaggedRevsUserParams else 0
         )
 
-        if totalContentEdits < minimumEditCount:
+        if totalContentEdits < minimumEditCount and flaggedEditCount < minimumFlaggedEditCount:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat mit {totalContentEdits} Bearbeitungen im Artikelnamensraum weniger als die benötigten {minimumEditCount}.",
+                    f"Das Benutzerkonto hat mit {totalContentEdits} Bearbeitungen im Artikelnamensraum weniger als die benötigten {minimumEditCount}. "
+                    f"und mit {flaggedEditCount} gesichteten Bearbeitungen weniger als die benötigten {minimumFlaggedEditCount}.",
+                )
+            )
+        elif totalContentEdits >= minimumEditCount:
+            criteriaChecks.append(
+                CriteriaCheck(
+                    True,
+                    f"Das Benutzerkonto hat mit {totalContentEdits} Bearbeitungen im Artikelnamensraum mehr als die benötigten {minimumEditCount}.",
                 )
             )
         else:
             criteriaChecks.append(
                 CriteriaCheck(
                     True,
-                    f"Das Benutzerkonto hat mit {totalContentEdits} Bearbeitungen im Artikelnamensraum mehr als die benötigten {minimumEditCount}.",
+                    f"Das Benutzerkonto hat mit {flaggedEditCount} gesichteten Bearbeitungen mehr als die benötigten {minimumFlaggedEditCount}.",
                 )
             )
         return criteriaChecks
@@ -317,7 +379,9 @@ class CriteriaChecker:
         criteriaChecks += self.checkGeneralEventLogCriterias(userData.logEntries)
         criteriaChecks += self.checkRegistrationTime(userData.registrationTime, 60)
         criteriaChecks += self.checkEditCount(userData.editCount(), 300)
-        criteriaChecks += self.checkArticleEditCount(userData.flaggedRevsUserParams, 300)
+        criteriaChecks += self.checkArticleEditCountOrFlaggedEditCount(
+            userData.flaggedRevsUserParams, userData.flaggedEditCount, 300, 200
+        )
         # TODO: also check for 200 reviewed edits alternative
         criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 15)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.flaggedRevsUserParams, 14)
@@ -332,7 +396,9 @@ class CriteriaChecker:
         criteriaChecks += self.checkGeneralEligibilityForPromotion(userData.user)
         criteriaChecks += self.checkGeneralEventLogCriterias(userData.logEntries)
         criteriaChecks += self.checkRegistrationTime(userData.registrationTime, 30)
-        criteriaChecks += self.checkArticleEditCount(userData.flaggedRevsUserParams, 150)
+        criteriaChecks += self.checkArticleEditCountOrFlaggedEditCount(
+            userData.flaggedRevsUserParams, userData.flaggedEditCount, 150, 50
+        )
         # TODO: also check for 50 reviewed edits alternative
         criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 7)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.flaggedRevsUserParams, 8)

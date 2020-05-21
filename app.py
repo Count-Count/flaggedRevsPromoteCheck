@@ -19,8 +19,10 @@ def checkCriteria(wiki: str, username: str) -> str:
     user = pywikibot.User(site, username)
     if not user.isRegistered():
         abort(400, "User not found.")
-    crit = criteriaChecker.checkUserEligibleForAutoReviewGroup(criteriaChecker.getUserData(user, datetime.now()))
 
+    userData = criteriaChecker.getUserData(user, datetime.now(), True)
+
+    crit = criteriaChecker.checkUserEligibleForAutoReviewGroup(userData)
     res = ""
     if not list(filter(lambda criteria: not criteria.met, crit)):
         res += f"Benutzer:{username} erfüllt die Kriterien für passive Sichterrechte:"
@@ -31,7 +33,7 @@ def checkCriteria(wiki: str, username: str) -> str:
         res += f'<li style="color:{ "green" if c.met else "red"}">' + c.text + "</li>"
     res += "</ul>"
 
-    crit = criteriaChecker.checkUserEligibleForReviewGroup(criteriaChecker.getUserData(user, datetime.now()))
+    crit = criteriaChecker.checkUserEligibleForReviewGroup(userData)
     if not list(filter(lambda criteria: not criteria.met, crit)):
         res += f"Benutzer:{username} erfüllt die Kriterien für aktive Sichterrechte:"
     else:
