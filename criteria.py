@@ -234,8 +234,8 @@ class CriteriaChecker:
             criteriaChecks.append(
                 CriteriaCheck(
                     False,
-                    f"Das Benutzerkonto hat mit {totalContentEdits} Bearbeitungen im Artikelnamensraum weniger als die benötigten {minimumEditCount}. "
-                    f"und mit {flaggedEditCount} gesichteten Bearbeitungen weniger als die benötigten {minimumFlaggedEditCount}.",
+                    f"Das Benutzerkonto hat mit {totalContentEdits} Bearbeitungen im Artikelnamensraum weniger als die benötigten {minimumEditCount}"
+                    f" und mit {flaggedEditCount} gesichteten Bearbeitungen weniger als die benötigten {minimumFlaggedEditCount}.",
                 )
             )
         elif totalContentEdits >= minimumEditCount:
