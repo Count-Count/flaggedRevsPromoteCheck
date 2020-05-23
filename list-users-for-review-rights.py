@@ -123,7 +123,7 @@ class Program:
 
         page = pywikibot.Page(self.site, "Wikipedia:Gesichtete Versionen/Rechtevergabe/Botliste")
         page.text += newSection
-        page.save(summary=f"Neue Kandidaten für den {self.getDateString(startTime)} hinzugefügt.")
+        page.save(summary=f"Bot: Neue Kandidaten für den {self.getDateString(startTime)} hinzugefügt.")
 
         print(newSection)
 
