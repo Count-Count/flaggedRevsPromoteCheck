@@ -47,7 +47,7 @@ class Program:
         autoReviewCandidates = set()
         pattern = re.compile(r"\{\{Wikipedia:Gesichtete Versionen/Rechtevergabe/Vorlage\|([^}]+)\}\}")
         for rev in [x for x in actualRevs]:
-            oldText = page.getOldVersion(rev.parent_id) if not newText else newText
+            oldText = page.getOldVersion(rev.parent_id)
             newText = rev.text
             addedText = newText[len(oldText) :]
             targetSet = set()
