@@ -7,12 +7,11 @@
 from __future__ import unicode_literals
 
 import locale
-from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import cast, List, Any, Set
-
 import os
 import re
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any, List, Set, cast
 
 import pytz
 import pywikibot

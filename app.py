@@ -1,9 +1,10 @@
-from datetime import datetime
 import locale
+from datetime import datetime
 
-from flask import Flask, abort
-import pywikibot
 import pytz
+import pywikibot
+from flask import Flask, abort
+
 from criteria import CriteriaChecker
 
 app = Flask("flaggedrevscrit")
