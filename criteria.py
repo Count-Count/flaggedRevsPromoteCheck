@@ -9,10 +9,9 @@ from __future__ import unicode_literals
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast, List, Any, Dict
+from typing import Any, Dict, List, cast
 
 import pytz
-
 import pywikibot
 from pywikibot.data import mysql
 
