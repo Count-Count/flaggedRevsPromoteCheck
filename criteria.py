@@ -35,7 +35,7 @@ class UserData:
 
 
 class CriteriaChecker:
-    def __init__(self, site) -> None:
+    def __init__(self, site: pywikibot.site.BaseSite) -> None:
         self.site = site
         self.timezone = pytz.timezone("Europe/Berlin")
 
@@ -123,7 +123,7 @@ class CriteriaChecker:
             self.getFlaggedRevsUserParams(user),
         )
 
-    def getUserRegistrationTimeSafe(self, user: pywikibot.User) -> datetime:
+    def getUserRegistrationTimeSafe(self, user: pywikibot.User) -> pywikibot.Timestamp:
         registrationTime = user.registration()
         if registrationTime:
             return registrationTime
@@ -183,7 +183,9 @@ class CriteriaChecker:
             criteriaChecks.append(CriteriaCheck(True, "Benutzer ist kein Bot."))
         return criteriaChecks
 
-    def checkRegistrationTime(self, registrationTime, minimumAgeInDays: int) -> List[CriteriaCheck]:
+    def checkRegistrationTime(
+        self, registrationTime: pywikibot.Timestamp, minimumAgeInDays: int
+    ) -> List[CriteriaCheck]:
         criteriaChecks = []
         if not registrationTime:
             raise NotImplementedError
@@ -204,7 +206,7 @@ class CriteriaChecker:
             )
         return criteriaChecks
 
-    def checkEditCount(self, editCount, minimumEditCount: int) -> List[CriteriaCheck]:
+    def checkEditCount(self, editCount: int, minimumEditCount: int) -> List[CriteriaCheck]:
         criteriaChecks = []
         if editCount < minimumEditCount:
             criteriaChecks.append(
@@ -352,10 +354,10 @@ class CriteriaChecker:
             )
         return criteriaChecks
 
-    def checkRevertCountRatio(self, contribs, flaggedRevsUserParams, maxRatio):
+    def checkRevertCountRatio(self, contribs, flaggedRevsUserParams, maxRatio: float) -> List[CriteriaCheck]:
         criteriaChecks = []
         if not "revertedEdits" in flaggedRevsUserParams:
-            criteriaChecks.append(CriteriaCheck(True, f"Es gibt keine Einträge zu zurückgesetzten Bearbeitungen.",))
+            criteriaChecks.append(CriteriaCheck(True, "Es gibt keine Einträge zu zurückgesetzten Bearbeitungen.",))
         else:
             actRatio = float(flaggedRevsUserParams["revertedEdits"]) / len(contribs)
             if actRatio > maxRatio:
@@ -379,7 +381,7 @@ class CriteriaChecker:
         criteriaChecks += self.checkGeneralEligibilityForPromotion(userData.user)
         criteriaChecks += self.checkGeneralEventLogCriterias(userData.logEntries)
         criteriaChecks += self.checkRegistrationTime(userData.registrationTime, 60)
-        criteriaChecks += self.checkEditCount(userData.editCount(), 300)
+        criteriaChecks += self.checkEditCount(userData.editCount, 300)
         criteriaChecks += self.checkArticleEditCountOrFlaggedEditCount(
             userData.flaggedRevsUserParams, userData.flaggedEditCount, 300, 200
         )
