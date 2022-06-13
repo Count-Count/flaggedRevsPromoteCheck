@@ -386,7 +386,7 @@ class CriteriaChecker:
         criteriaChecks += self.checkArticleEditCountOrFlaggedEditCount(
             userData.flaggedRevsUserParams, userData.flaggedEditCount, 300, 200
         )
-        criteriaChecks += self.checkSpacedEdits(userData.articleContribs, 15)
+        criteriaChecks += self.checkSpacedEdits(userData.contribs, 15)
         criteriaChecks += self.checkMinimumEditedArticlePages(userData.flaggedRevsUserParams, 14)
         criteriaChecks += self.checkRecentArticleEditCount(userData.articleContribs, 5, 30)
         criteriaChecks += self.checkCustomSummaryEditCount(userData.flaggedRevsUserParams, 30)
