@@ -21,6 +21,9 @@ def checkCriteria(wiki: str, username: str) -> str:
     if not user.isRegistered():
         abort(400, "User not found.")
 
+    if user.editCount() >= 5000:
+        return "This tool only works for users with less than 5000 edits."
+
     userData = criteriaChecker.getUserData(user, datetime.now(), True)
 
     crit = criteriaChecker.checkUserEligibleForAutoReviewGroup(userData)
