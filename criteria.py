@@ -358,7 +358,12 @@ class CriteriaChecker:
     def checkRevertCountRatio(self, contribs, flaggedRevsUserParams, maxRatio: float) -> List[CriteriaCheck]:
         criteriaChecks = []
         if not "revertedEdits" in flaggedRevsUserParams:
-            criteriaChecks.append(CriteriaCheck(True, "Es gibt keine Einträge zu zurückgesetzten Bearbeitungen.",))
+            criteriaChecks.append(
+                CriteriaCheck(
+                    True,
+                    "Es gibt keine Einträge zu zurückgesetzten Bearbeitungen.",
+                )
+            )
         else:
             actRatio = float(flaggedRevsUserParams["revertedEdits"]) / len(contribs)
             if actRatio > maxRatio:
