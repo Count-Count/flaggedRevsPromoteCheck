@@ -14,6 +14,7 @@ from typing import Any, Dict, List, cast
 import pytz
 import pywikibot
 from pywikibot.data import mysql
+from pywikibot.site import Namespace
 
 
 @dataclass
@@ -60,7 +61,7 @@ class CriteriaChecker:
     def getFlaggedRevisionCount(self, contribs) -> int:
         revs = ""
         for contrib in contribs:
-            if contrib["ns"] == 0 or contrib["ns"] == pywikibot.site.Namespace.TEMPLATE:
+            if contrib["ns"] == 0 or contrib["ns"] == Namespace.TEMPLATE:
                 if len(revs) != 0:
                     revs += "|"
                 revs += str(contrib["revid"])
@@ -110,11 +111,11 @@ class CriteriaChecker:
 
     def getUserData(self, user: pywikibot.User, endTime: datetime, exactResults: bool) -> UserData:
         contribs = list(user.contributions(total=5000, start=endTime))
-        articleContribs = list(user.contributions(total=5000, start=endTime, namespace=""))
+        articleContribs = list(user.contributions(total=5000, start=endTime, namespaces=Namespace.MAIN))
         flaggedEditCount = self.getFlaggedEditCount(user, exactResults)
         return UserData(
             user,
-            user.editCount,
+            user.editCount(force=True),
             contribs,
             articleContribs,
             flaggedEditCount,
@@ -173,7 +174,7 @@ class CriteriaChecker:
 
     def checkGeneralEligibilityForPromotion(self, user: pywikibot.User) -> List[CriteriaCheck]:
         criteriaChecks = []
-        if user.isBlocked():
+        if user.is_blocked():
             criteriaChecks.append(CriteriaCheck(False, "Benutzer ist gesperrt."))
         else:
             criteriaChecks.append(CriteriaCheck(True, "Benutzer ist nicht gesperrt."))
