@@ -16,6 +16,7 @@ pytz = "*"
 pywikibot = "*"
 flask = "*"
 pymysql = "*"
+mwparserfromhell = "*"
 
 [requires]
 python_version = "3.7"
