@@ -5,7 +5,8 @@ replica.my.cnf
 
 # pywikibot
 /user-password.py
-/pywikibot.lwp
+/pywikibot*.lwp
 /throttle.ctrl
 /apicache-py3/
+/apicache/
 /logs/
