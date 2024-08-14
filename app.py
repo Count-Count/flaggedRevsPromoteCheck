@@ -1,4 +1,5 @@
 import locale
+import platform
 from datetime import datetime
 
 import pytz
@@ -7,8 +8,12 @@ from flask import Flask, abort
 
 from criteria import CriteriaChecker
 
+if platform.system() == "Darwin":
+    locale.setlocale(locale.LC_ALL, "de_DE.UTF-8")
+else:
+    locale.setlocale(locale.LC_ALL, "de_DE.utf8")
+
 app = Flask("flaggedrevscrit")
-locale.setlocale(locale.LC_ALL, "de_DE.utf8")
 site = pywikibot.Site()
 site.login()
 timezone = pytz.timezone("Europe/Berlin")
